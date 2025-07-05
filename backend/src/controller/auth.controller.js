@@ -119,3 +119,38 @@ export async function logout(req,res){
         message:"logout done"
     })
 }
+
+export async function onboard(req,res){
+    try {
+        const userId = req.user._id
+        const {fullname,bio,nativelang,location} = req.body;
+        if(!fullname || !bio || !nativelang || !location){
+            return res.status(400).json({
+                message:"all fileds are required",
+                missing:[!fullname&&"fullname",!bio&&"bio",!nativelang&&"nativlang",!location&&"location"]
+            })
+        }
+       const updated= await User.findOneAndUpdate(userId,{
+            ...req.body,
+            isOnboarded:true,
+        
+        },{new:true})
+            if(!updated){
+                return res.status(404).json({
+                    message:"user not updated"
+                })
+            }
+            return res.status(200).json({
+                success:true,
+                user:updated
+            })
+    } catch (error) {
+         console.log(error);
+        
+        res.status(500).json({
+            success:false,
+            message:'User not created some error'
+
+        })
+    }
+}
