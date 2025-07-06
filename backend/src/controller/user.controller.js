@@ -113,6 +113,22 @@ export async function acceptFriendRequest(req,res,next) {
         }
         friendreq.status="accepted"
         await friendreq.save()
+
+
+        await User.findByIdAndUpdate(friendreq.sender,{
+          $addToSet:{
+            friends:friendreq.recipient
+          }
+        })
+          await User.findByIdAndUpdate(friendreq.recipient,{
+          $addToSet:{
+            friends:friendreq.sender
+          }
+        })
+
+        return res.status(200).json({
+          message:"Friend req accepted"
+        })
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Server error" });
