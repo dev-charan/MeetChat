@@ -9,4 +9,12 @@ authRoute.post("/logout",logout)
 authRoute.post("/signup",signup)
 
 authRoute.post("/onboarding",protectedRoute,onboard)
+
+authRoute.get("/me",protectedRoute,(req,res)=>{
+    return res.status(200).json({
+        success:true,
+        user:req.user
+    })    
+})
+
 export default authRoute;
