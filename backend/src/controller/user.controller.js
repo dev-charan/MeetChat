@@ -134,3 +134,45 @@ export async function acceptFriendRequest(req,res,next) {
         return res.status(500).json({ message: "Server error" });
     }
 }
+
+export async function getFriendRequests(req, res, next) {
+  try {
+    const incommingreq = await friendRequest.find({
+      recipient: req.user.id,
+      status: "pending",
+    }).populate("sender", "fullName profilePic nativeLanguage learningLanguage");
+
+    const acceptedReq = await friendRequest.find({
+      sender: req.user.id,
+      status: "accepted",
+    }).populate("recipient", "fullName profilePic");
+
+    return res.status(200).json({
+      message: "no errors in the getfriendreq",
+      pendingRequests: incommingreq,
+      acceptedRequests: acceptedReq
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "errors in the getfriendreq",
+      error: error.message
+    });
+  }
+}
+
+export async function getOutgoingFriendReq(req,res,next) {
+   
+  try {
+    const outgoingRequest = await friendRequest.find({
+      sender:req.user.id,
+      status:"pending",
+    }).populate("recipient","fullName profilePic nativeLanguage learningLanguage")
+
+    return res.status(200).json(outgoingRequest)
+  } catch (error) {
+     return res.status(500).json({
+      message: "errors in the getougoingreq",
+      error: error.message
+    });
+  }
+}
