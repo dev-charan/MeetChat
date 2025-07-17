@@ -1,7 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// ✅ No '@tailwindcss/vite' needed here
 export default defineConfig({
-  plugins: [react()],
+    plugins: [react()],
+
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    watch: {
+      usePolling: true, // for Windows + Docker compatibility
+    },
+  },
 });
