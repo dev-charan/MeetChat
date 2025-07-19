@@ -1,84 +1,53 @@
-import React from 'react'
-import { Route, Routes, Navigate } from 'react-router'
-import Home from './pages/Home'
-import Call from './pages/Call'
-import Login from './pages/Login'
-import Notification from './pages/Notification'
-import SignUp from './pages/SignUp'
-import Onborad from './pages/Onborad'
-import Chat from './pages/Chat'
-import { Toaster } from 'react-hot-toast'
-import { useQuery } from '@tanstack/react-query'
-import { axiosInstance } from './lib/axios'
+import { Route, Routes, Navigate, useLocation } from 'react-router';
+import Home from './pages/Home';
+import Call from './pages/Call';
+import Login from './pages/Login';
+import Notification from './pages/Notification';
+import SignUp from './pages/SignUp';
+import Onborad from './pages/Onborad';
+import Chat from './pages/Chat';
+import { Toaster } from 'react-hot-toast';
+import PageLoader from './components/PageLoader';
+import useAuthUser from './hooks/useAuthUser';
 
 const ProtectedRoute = ({ children, isAuth }) => {
-  return isAuth ? children : <Navigate to="/login" replace />
-}
+  return isAuth ? children : <Navigate to="/login" replace />;
+};
 
 const App = () => {
-  const { data: authData, isLoading, error } = useQuery({
-    queryKey: ['authUser'],
-    queryFn: async () => {
-      const res = await axiosInstance.get('/auth/me')
-      return res.data
-    },
-    retry: false,
-    refetchOnWindowFocus: false,
-  })
+  const location = useLocation();
+  const { isLoading, authUser } = useAuthUser();
 
-  const currentUser = authData?.user
+  const isAuthenticated = Boolean(authUser);
+  const isOnboarded = authUser?.isOnboarded;
+
+  if (isLoading) return <PageLoader />;
+
+  // Optional: Force onboarding before accessing app
+  if (isAuthenticated && !isOnboarded && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   return (
     <div className="h-screen" data-theme="night">
       <Routes>
         {/* Public Routes */}
-       
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
 
         {/* Protected Routes */}
-         <Route path="/"  element={
-            <ProtectedRoute isAuth={!!currentUser}>
-              <Home/>
-            </ProtectedRoute>
-          }/>
-          
-        <Route
-          path="/notification"
-          element={
-            <ProtectedRoute isAuth={!!currentUser}>
-              <Notification />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute isAuth={!!currentUser}>
-              <Onborad />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute isAuth={!!currentUser}>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/call"
-          element={
-            <ProtectedRoute isAuth={!!currentUser}>
-              <Call />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/" element={<ProtectedRoute isAuth={isAuthenticated}><Home /></ProtectedRoute>} />
+        <Route path="/notification" element={<ProtectedRoute isAuth={isAuthenticated}><Notification /></ProtectedRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute isAuth={isAuthenticated}><Onborad /></ProtectedRoute>} />
+        <Route path="/chat" element={<ProtectedRoute isAuth={isAuthenticated}><Chat /></ProtectedRoute>} />
+        <Route path="/call" element={<ProtectedRoute isAuth={isAuthenticated}><Call /></ProtectedRoute>} />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />
       </Routes>
       <Toaster />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;

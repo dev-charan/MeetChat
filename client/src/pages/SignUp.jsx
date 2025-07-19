@@ -2,8 +2,8 @@ import { useState } from "react";
 import { ShipWheelIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import { axiosInstance } from "../lib/axios";
+
+import { signUp } from "../lib/api";
 
 const SignUpPage = () => {
   const [signupData, setSignupData] = useState({
@@ -13,20 +13,17 @@ const SignUpPage = () => {
   });
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const {mutate,isPending,error} = useMutation({
-    mutationFn:async()=>{
-      const res = await axiosInstance.post("/auth/signup",signupData)
-      return res.data;
-    },
+
+  const {mutate:signUpMutaion,isPending,error} = useMutation({
+    mutationFn:signUp,
     onSuccess:()=> {queryClient.invalidateQueries({queryKey:["authUser"]})
     navigate("/")}
   })
 
   const handleSignup = (e) => {
     e.preventDefault();
-    mutate()
-    // You can add your signup logic here
-    console.log("Sign up data:", signupData);
+    signUpMutaion(signupData)
+
   };
 
   return (
@@ -44,6 +41,13 @@ const SignUpPage = () => {
               Streamify
             </span>
           </div>
+
+           {/* ERROR MESSAGE IF ANY */}
+          {error && (
+            <div className="alert alert-error mb-4">
+              <span>{error.response.data.message}</span>
+            </div>
+          )}
 
           <div className="w-full">
             <form onSubmit={handleSignup}>
