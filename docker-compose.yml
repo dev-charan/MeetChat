@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5001:5001"
+    environment:
+      - PORT=5001
+      - MONGODB_CONNECTION=mongodb+srv://raicharan100:PZO9juzSeC2DEoEa@cluster0.fpltcby.mongodb.net/meetchat_db?retryWrites=true&w=majority&appName=Cluster0
+      - JWT=charan
+      - STREAM_KEY=cuxb26hjmzjg
+      - STREAM_SEC=zrsvs79kwnk26emup7t7fjej4et9fzq2zh6qkh5dz8pphfg7dk68uft2gguhzgqp
+    depends_on:
+      - mongo
+    networks:
+      - meetchat-net
+
+  client:
+    build:
+      context: ./client
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:5001
+    networks:
+      - meetchat-net
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - meetchat-net
+
+networks:
+  meetchat-net:
+    driver: bridge
