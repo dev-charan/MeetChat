@@ -10,10 +10,6 @@ import { Toaster } from 'react-hot-toast';
 import PageLoader from './components/PageLoader';
 import useAuthUser from './hooks/useAuthUser';
 
-const ProtectedRoute = ({ children, isAuth }) => {
-  return isAuth ? children : <Navigate to="/login" replace />;
-};
-
 const App = () => {
   const location = useLocation();
   const { isLoading, authUser } = useAuthUser();
@@ -23,9 +19,21 @@ const App = () => {
 
   if (isLoading) return <PageLoader />;
 
-  // Optional: Force onboarding before accessing app
+  const isPublicRoute = ['/login', '/signup'].includes(location.pathname);
+
+  // 🔒 Not Authenticated → Login
+  if (!isAuthenticated && !isPublicRoute) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // ✅ Authenticated but Not Onboarded → Onboarding
   if (isAuthenticated && !isOnboarded && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // 🛑 If onboarded user tries to access login/signup → redirect to Home
+  if (isAuthenticated && isOnboarded && isPublicRoute) {
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -35,12 +43,14 @@ const App = () => {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected Routes */}
-        <Route path="/" element={<ProtectedRoute isAuth={isAuthenticated}><Home /></ProtectedRoute>} />
-        <Route path="/notification" element={<ProtectedRoute isAuth={isAuthenticated}><Notification /></ProtectedRoute>} />
-        <Route path="/onboarding" element={<ProtectedRoute isAuth={isAuthenticated}><Onborad /></ProtectedRoute>} />
-        <Route path="/chat" element={<ProtectedRoute isAuth={isAuthenticated}><Chat /></ProtectedRoute>} />
-        <Route path="/call" element={<ProtectedRoute isAuth={isAuthenticated}><Call /></ProtectedRoute>} />
+        {/* Onboarding */}
+        <Route path="/onboarding" element={<Onborad />} />
+
+        {/* Authenticated and Onboarded Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/notification" element={<Notification />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/call" element={<Call />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />

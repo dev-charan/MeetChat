@@ -10,3 +10,8 @@ export const getAuthUser=async () => {
       console.log(res.data);
       return res.data;
 }
+
+export const compleateOnloadring = async(userdata)=>{
+    const res = await axiosInstance.post('/auth/onboarding',userdata)
+    return res.data
+}
