@@ -66,52 +66,57 @@ export async function signup(req,res){
 }
 
 
-export async function login(req,res){
-try {
-    const {email,password}=req.body;
-    if(!email,!password){
-        res.status(400).json({
-            message:"all field is required"
-        })
-    }
-    const user = await User.findOne({email})
-    if(!user){
-        return res.status(401).json({
-            message:"Invalid email or password"
-        })
-    }
-     const isPassword = await user.matchPassword(password)
-     if(!isPassword){
-        res.status(401).json({
-            message:"Invalid email or password"
-        })
-     }
-
-      const token = jwt.sign({userId:user._id},process.env.JWT,{
-        expiresIn:"7d"
-    })
-
-    res.cookie("jwt",token,{
-        maxAge:7 * 24 * 60 *60*1000,
-        httpOnly:true,
-        sameSite:"strict",
-        secure:process.env.NODE_ENV === "production"
-    })
-
-    res.status(201).json({
-        success:true,
-        message:"login done",
-        user:user
-    })
-} catch (error) {
-     console.log(error);
+export async function login(req, res) {
+    try {
+        const { email, password } = req.body;
         
+        // Fix: Use || instead of , and add return
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "All fields are required"
+            });
+        }
+        
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({
+                message: "Invalid email or password"
+            });
+        }
+        
+        const isPassword = await user.matchPassword(password);
+        
+        // Fix: Add return statement here
+        if (!isPassword) {
+            return res.status(401).json({
+                message: "Invalid email or password"
+            });
+        }
+        
+        const token = jwt.sign({ userId: user._id }, process.env.JWT, {
+            expiresIn: "7d"
+        });
+        
+        res.cookie("jwt", token, {
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            httpOnly: true,
+            sameSite: "strict",
+            secure: process.env.NODE_ENV === "production"
+        });
+        
+        res.status(200).json({ // Changed from 201 to 200 (login is not creating something)
+            success: true,
+            message: "Login successful",
+            user: user
+        });
+        
+    } catch (error) {
+        console.log(error);
         res.status(500).json({
-            success:false,
-            message:'User not created some error'
-
-        })
-}
+            success: false,
+            message: 'Login failed due to server error'
+        });
+    }
 }
 export async function logout(req,res){
    res.clearCookie("jwt")
