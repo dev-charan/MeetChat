@@ -9,6 +9,7 @@ import Chat from './pages/Chat';
 import { Toaster } from 'react-hot-toast';
 import PageLoader from './components/PageLoader';
 import useAuthUser from './hooks/useAuthUser';
+import Layout from './components/Layout';
 
 const App = () => {
   const location = useLocation();
@@ -47,8 +48,10 @@ const App = () => {
         <Route path="/onboarding" element={<Onborad />} />
 
         {/* Authenticated and Onboarded Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/notification" element={<Notification />} />
+        
+          <Route path="/" element={<Layout showSidebar={true}><Home /> </Layout>} />
+       
+        <Route path="/notifications" element={<Notification />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/call" element={<Call />} />
 
