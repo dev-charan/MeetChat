@@ -6,7 +6,7 @@ import {
   getUserFriends,
   sendFriendRequest,
 } from "../lib/api";
-import { data, Link } from "react-router";
+import { Link } from "react-router"; // Fixed: removed 'data' import
 import { CheckCircleIcon, MapPinIcon, UserPlusIcon, UsersIcon } from "lucide-react";
 
 import { capitialize } from "../lib/utils";
@@ -22,7 +22,8 @@ const HomePage = () => {
     queryKey: ["friends"],
     queryFn: getUserFriends,
   });
-const friends = data?.friends || []
+  const friends = data?.friends || [];
+
   const { data: recommendedUsers = [], isLoading: loadingUsers } = useQuery({
     queryKey: ["users"],
     queryFn: getRecommendedUsers,
@@ -35,7 +36,12 @@ const friends = data?.friends || []
 
   const { mutate: sendRequestMutation, isPending } = useMutation({
     mutationFn: sendFriendRequest,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["outgoingFriendReqs"] });
+    },
+    onError: (error) => {
+      console.error("Send Friend Request Error:", error?.response?.data || error.message);
+    },
   });
 
   useEffect(() => {
@@ -129,7 +135,6 @@ const friends = data?.friends || []
                           {getLanguageFlag(user.nativelang)}
                           Native: {capitialize(user.nativelang)}
                         </span>
-                      
                       </div>
 
                       {user.bio && <p className="text-sm opacity-70">{user.bio}</p>}
@@ -138,7 +143,7 @@ const friends = data?.friends || []
                       <button
                         className={`btn w-full mt-2 ${
                           hasRequestBeenSent ? "btn-disabled" : "btn-primary"
-                        } `}
+                        }`}
                         onClick={() => sendRequestMutation(user._id)}
                         disabled={hasRequestBeenSent || isPending}
                       >
