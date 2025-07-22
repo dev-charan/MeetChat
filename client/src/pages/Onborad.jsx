@@ -82,7 +82,7 @@ const queryClient = useQueryClient()
               </label>
               <input
                 type="text"
-                name="fullName"
+                name="fullname"
                 value={formState.fullname}
                 onChange={(e) => setFormState({ ...formState, fullname: e.target.value })}
                 className="input input-bordered w-full"
