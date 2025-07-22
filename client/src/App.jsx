@@ -1,4 +1,9 @@
-import { Route, Routes, Navigate, useLocation } from 'react-router';
+import { Routes, Route, Navigate } from 'react-router';
+import { Toaster } from 'react-hot-toast';
+import useAuthUser from './hooks/useAuthUser';
+import PageLoader from './components/PageLoader';
+
+// Pages
 import Home from './pages/Home';
 import Call from './pages/Call';
 import Login from './pages/Login';
@@ -6,58 +11,126 @@ import Notification from './pages/Notification';
 import SignUp from './pages/SignUp';
 import Onborad from './pages/Onborad';
 import Chat from './pages/Chat';
-import { Toaster } from 'react-hot-toast';
-import PageLoader from './components/PageLoader';
-import useAuthUser from './hooks/useAuthUser';
 import Layout from './components/Layout';
 
-const App = () => {
-  const location = useLocation();
-  const { isLoading, authUser } = useAuthUser();
-
+// Route Guards
+const PublicRoute = ({ children }) => {
+  const { authUser } = useAuthUser();
   const isAuthenticated = Boolean(authUser);
   const isOnboarded = authUser?.isOnboarded;
 
-  if (isLoading) return <PageLoader />;
+  if (isAuthenticated && isOnboarded) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
 
-  const isPublicRoute = ['/login', '/signup'].includes(location.pathname);
+const ProtectedRoute = ({ children, requireOnboarding = true }) => {
+  const { authUser } = useAuthUser();
+  const isAuthenticated = Boolean(authUser);
+  const isOnboarded = authUser?.isOnboarded;
 
-  // 🔒 Not Authenticated → Login
-  if (!isAuthenticated && !isPublicRoute) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // ✅ Authenticated but Not Onboarded → Onboarding
-  if (isAuthenticated && !isOnboarded && location.pathname !== '/onboarding') {
+  if (requireOnboarding && !isOnboarded) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // 🛑 If onboarded user tries to access login/signup → redirect to Home
-  if (isAuthenticated && isOnboarded && isPublicRoute) {
+  if (!requireOnboarding && isOnboarded) {
     return <Navigate to="/" replace />;
   }
+
+  return children;
+};
+
+const AppWithLayout = ({ children, showSidebar = true }) => (
+  <Layout showSidebar={showSidebar}>{children}</Layout>
+);
+
+const App = () => {
+  const { isLoading } = useAuthUser();
+
+  if (isLoading) return <PageLoader />;
 
   return (
     <div className="h-screen" data-theme="night">
       <Routes>
         {/* Public Routes */}
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/login" element={<Login />} />
+        <Route 
+          path="/login" 
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/signup" 
+          element={
+            <PublicRoute>
+              <SignUp />
+            </PublicRoute>
+          } 
+        />
 
-        {/* Onboarding */}
-        <Route path="/onboarding" element={<Onborad />} />
+        {/* Onboarding Route */}
+        <Route 
+          path="/onboarding" 
+          element={
+            <ProtectedRoute requireOnboarding={false}>
+              <Onborad />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* Authenticated and Onboarded Routes */}
+        {/* Protected Routes */}
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <AppWithLayout>
+                <Home />
+              </AppWithLayout>
+            </ProtectedRoute>
+          } 
+        />
         
-          <Route path="/" element={<Layout showSidebar={true}><Home /> </Layout>} />
-       
-        <Route path="/notifications" element={<Notification />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/call" element={<Call />} />
+        <Route 
+          path="/notifications" 
+          element={
+            <ProtectedRoute>
+              <AppWithLayout>
+                <Notification />
+              </AppWithLayout>
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/chat" 
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/call" 
+          element={
+            <ProtectedRoute>
+              <Call />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+      
       <Toaster />
     </div>
   );

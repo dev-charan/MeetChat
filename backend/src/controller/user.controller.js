@@ -93,68 +93,72 @@ export async function sendFriendRequest(req, res, next) {
 }
 
 
-export async function acceptFriendRequest(req,res,next) {
+export async function acceptFriendRequest(req, res, next) {
+  try {
+    const { idx: requestId } = req.params  // ✅ This matches your route /:idx/accept
     
-    try {
-        const {idx:requestId} = req.params
-
-        const friendreq = await friendRequest.findById(requestId);
-
-        if(!friendreq){
-            return res.status(404).json({
-                message:"Friend request not found"
-            })
-        }
-
-        if(friendreq.recipient.toString() !== req.user.id){
-            return res.status(403).json({
-                message:"you are not authized"
-            })
-        }
-        friendreq.status="accepted"
-        await friendreq.save()
-
-
-        await User.findByIdAndUpdate(friendreq.sender,{
-          $addToSet:{
-            friends:friendreq.recipient
-          }
-        })
-          await User.findByIdAndUpdate(friendreq.recipient,{
-          $addToSet:{
-            friends:friendreq.sender
-          }
-        })
-
-        return res.status(200).json({
-          message:"Friend req accepted"
-        })
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Server error" });
+    const friendreq = await friendRequest.findById(requestId);
+    
+    if (!friendreq) {
+      return res.status(404).json({
+        message: "Friend request not found"
+      })
     }
+    
+    if (friendreq.recipient.toString() !== req.user.id) {
+      return res.status(403).json({
+        message: "You are not authorized"
+      })
+    }
+    
+    friendreq.status = "accepted"
+    await friendreq.save()
+    
+    await User.findByIdAndUpdate(friendreq.sender, {
+      $addToSet: {
+        friends: friendreq.recipient
+      }
+    })
+    
+    await User.findByIdAndUpdate(friendreq.recipient, {
+      $addToSet: {
+        friends: friendreq.sender
+      }
+    })
+    
+    return res.status(200).json({
+      message: "Friend request accepted"
+    })
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
 }
+
+
 
 export async function getFriendRequests(req, res, next) {
   try {
+    // ✅ Updated to match your actual schema field names
     const incommingreq = await friendRequest.find({
       recipient: req.user.id,
       status: "pending",
-    }).populate("sender", "fullName profilePic nativeLanguage learningLanguage");
+    }).populate("sender", "fullname profilePic nativelang");
 
     const acceptedReq = await friendRequest.find({
       sender: req.user.id,
       status: "accepted",
-    }).populate("recipient", "fullName profilePic");
+    }).populate("recipient", "fullname profilePic");
 
     return res.status(200).json({
-      message: "no errors in the getfriendreq",
+      message: "Friend requests retrieved successfully",
       pendingRequests: incommingreq,
       acceptedRequests: acceptedReq
     });
   } catch (error) {
+    console.error("Error in getFriendRequests:", error);
     return res.status(500).json({
-      message: "errors in the getfriendreq",
+      message: "Error retrieving friend requests",
       error: error.message
     });
   }
@@ -165,7 +169,7 @@ export async function getOutgoingFriendReqs(req, res) {
     const outgoingRequests = await friendRequest.find({
       sender: req.user.id,
       status: "pending",
-    }).populate("recipient", "fullName profilePic nativeLanguage learningLanguage");
+    }).populate("recipient", "fullname profilePic nativelang");
 
     res.status(200).json(outgoingRequests);
   } catch (error) {
