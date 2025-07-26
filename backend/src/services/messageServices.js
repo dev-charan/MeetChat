@@ -1,7 +1,7 @@
-import Message from '../models/Message.js';
 import Conversation from '../models/Conversation.js';
 import User from '../models/User.js';
-import { cache } from '../config/redis.js';
+import { cache } from '../lib/redis.js';
+import Message from '../models/Massage.js';
 
 class MessageService {
     // Send a new message
