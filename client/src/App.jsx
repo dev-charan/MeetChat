@@ -113,7 +113,7 @@ const App = () => {
           path="/chat" 
           element={
             <ProtectedRoute>
-              <Chat />
+                <AppWithLayout><Chat/></AppWithLayout>
             </ProtectedRoute>
           } 
         />
@@ -122,6 +122,7 @@ const App = () => {
           path="/call" 
           element={
             <ProtectedRoute>
+
               <Call />
             </ProtectedRoute>
           } 

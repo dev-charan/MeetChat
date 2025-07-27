@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom scrollbar for modern browsers */
+::-webkit-scrollbar {
+  width: 4px;              /* Make it thin */
+  background: transparent; /* Hide track */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #999;  /* Customize thumb */
+  border-radius: 10px;     /* Rounded thumb */
+}
+
+/* Optional: Hide scrollbar track in Firefox */
+.scrollbar-custom {
+  scrollbar-width: thin;               /* Firefox: thin scrollbar */
+  scrollbar-color: #999 transparent;   /* Firefox: thumb and track */
+}
