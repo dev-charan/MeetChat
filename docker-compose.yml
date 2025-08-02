@@ -5,14 +5,20 @@ services:
     build: ./backend
     ports:
       - "5001:5001"
+    volumes:
+      - ./backend:/app               
+      - /app/node_modules            
     environment:
       - PORT=5001
       - MONGODB_CONNECTION=mongodb+srv://raicharan100:PZO9juzSeC2DEoEa@cluster0.fpltcby.mongodb.net/meetchat_db?retryWrites=true&w=majority&appName=Cluster0
       - JWT=charan
       - STREAM_KEY=cuxb26hjmzjg
       - STREAM_SEC=zrsvs79kwnk26emup7t7fjej4et9fzq2zh6qkh5dz8pphfg7dk68uft2gguhzgqp
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       - mongo
+      - redis
     networks:
       - meetchat-net
 
@@ -21,6 +27,9 @@ services:
       context: ./client
     ports:
       - "5173:5173"
+    volumes:
+      - ./client:/app                # Optional: Enable for Vite hot reload
+      - /app/node_modules
     environment:
       - VITE_BACKEND_URL=http://localhost:5001
     networks:
@@ -30,6 +39,13 @@ services:
     image: mongo
     ports:
       - "27017:27017"
+    networks:
+      - meetchat-net
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
     networks:
       - meetchat-net
 

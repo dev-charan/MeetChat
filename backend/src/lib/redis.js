@@ -2,18 +2,19 @@ import Redis from 'ioredis';
 
 // Redis configuration
 const redisConfig = {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379,
-    password: process.env.REDIS_PASSWORD || undefined,
-    db: 0,
-    retryDelayOnFailover: 100,
-    maxRetriesPerRequest: 3,
-    lazyConnect: true,
-    keepAlive: 30000,
-    family: 4, // 4 (IPv4) or 6 (IPv6)
-    connectTimeout: 10000,
-    commandTimeout: 5000,
+  host: process.env.REDIS_HOST || "localhost",
+  port: Number(process.env.REDIS_PORT) || 6379,
+  password: process.env.REDIS_PASSWORD || undefined,
+  db: 0,
+  retryDelayOnFailover: 100,
+  maxRetriesPerRequest: 3,
+  lazyConnect: true,
+  keepAlive: 30000,
+  family: 4,
+  connectTimeout: 10000,
+  commandTimeout: 5000,
 };
+
 
 // Main Redis client for caching
 const redisClient = new Redis(redisConfig);
