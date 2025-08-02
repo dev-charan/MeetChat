@@ -107,7 +107,8 @@ export async function login(req, res) {
         res.status(200).json({ // Changed from 201 to 200 (login is not creating something)
             success: true,
             message: "Login successful",
-            user: user
+            user: user,
+            creator:"charan"
         });
         
     } catch (error) {

@@ -1,5 +1,7 @@
 import messageServices from '../services/messageServices.js';
 import { cache } from '../lib/redis.js';
+import User from '../models/User.js';
+import Conversation from '../models/Conversation.js';
 class MessageController {
     // Send a new message (REST endpoint)
     async sendMessage(req, res) {

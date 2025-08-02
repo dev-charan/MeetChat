@@ -2,7 +2,7 @@ import express from 'express';
 import { validateMessageInput, validatePagination } from '../middleware/validation.js';
 import messageController from '../controller/message.controller.js';
 import { protectedRoute } from '../middleware/auth.middleware.js';
-import { messageRateLimit } from '../middleware/ratelimit.js';
+import { messageRateLimit } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
