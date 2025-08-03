@@ -1,188 +1,215 @@
-import { Search } from 'lucide-react'
-import React, { useState } from 'react'
-import ContactList from './components/ContactList'
+// MessageSidebar.js
+import { useConversations } from "../../hooks/useConversationInfo";
+import { useState, useMemo } from "react";
+import { Search, MessageSquare, Users, Bell } from "lucide-react";
+import ContactList from "./components/ContactList";
 
-const contactsData = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-    lastMessage: "Hey! Are we still on for lunch tomorrow?",
-    timestamp: "2:30 PM",
-    unreadCount: 2,
-    isOnline: true,
-    lastMessageType: "text"
-  },
-  {
-    id: 2,
-    name: "Mike Chen",
-    avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-    lastMessage: "Thanks for the files!",
-    timestamp: "1:45 PM",
-    unreadCount: 0,
-    isOnline: true,
-    lastMessageType: "text"
-  },
-  {
-    id: 3,
-    name: "Emma Wilson",
-    avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-    lastMessage: "📎 Document.pdf",
-    timestamp: "12:20 PM",
-    unreadCount: 1,
-    isOnline: false,
-    lastMessageType: "file"
-  },
-  {
-    id: 4,
-    name: "David Rodriguez",
-    avatar: "https://randomuser.me/api/portraits/men/4.jpg",
-    lastMessage: "Perfect! Let's schedule that for next week.",
-    timestamp: "Yesterday",
-    unreadCount: 0,
-    isOnline: false,
-    lastMessageType: "text"
-  },
-  {
-    id: 5,
-    name: "Lisa Park",
-    avatar: "https://randomuser.me/api/portraits/women/5.jpg",
-    lastMessage: "📷 Photo",
-    timestamp: "Yesterday",
-    unreadCount: 3,
-    isOnline: true,
-    lastMessageType: "image"
-  },
-  {
-    id: 6,
-    name: "Alex Thompson",
-    avatar: "https://randomuser.me/api/portraits/men/6.jpg",
-    lastMessage: "Great job on the presentation!",
-    timestamp: "Friday",
-    unreadCount: 0,
-    isOnline: false,
-    lastMessageType: "text"
-  },
-  {
-    id: 7,
-    name: "Jennifer Lee",
-    avatar: "https://randomuser.me/api/portraits/women/7.jpg",
-    lastMessage: "Can you review this when you have time?",
-    timestamp: "Thursday",
-    unreadCount: 1,
-    isOnline: true,
-    lastMessageType: "text"
-  },
-  {
-    id: 8,
-    name: "Robert Kim",
-    avatar: "https://randomuser.me/api/portraits/men/8.jpg",
-    lastMessage: "🎤 Voice message",
-    timestamp: "Wednesday",
-    unreadCount: 0,
-    isOnline: false,
-    lastMessageType: "voice"
-  },
-  {
-    id: 9,
-    name: "Sarah Mitchell",
-    avatar: "https://randomuser.me/api/portraits/women/9.jpg",
-    lastMessage: "Hey! Are we still on for lunch tomorrow?",
-    timestamp: "2:30 PM",
-    unreadCount: 2,
-    isOnline: true,
-    lastMessageType: "text"
-  },
-  {
-    id: 10,
-    name: "Tom Wilson",
-    avatar: "https://randomuser.me/api/portraits/men/10.jpg",
-    lastMessage: "Thanks for the files!",
-    timestamp: "1:45 PM",
-    unreadCount: 0,
-    isOnline: true,
-    lastMessageType: "text"
-  },
-  {
-    id: 11,
-    name: "Kate Brown",
-    avatar: "https://randomuser.me/api/portraits/women/11.jpg",
-    lastMessage: "📎 Document.pdf",
-    timestamp: "12:20 PM",
-    unreadCount: 1,
-    isOnline: false,
-    lastMessageType: "file"
-  },
-  {
-    id: 12,
-    name: "James Smith",
-    avatar: "https://randomuser.me/api/portraits/men/12.jpg",
-    lastMessage: "Perfect! Let's schedule that for next week.",
-    timestamp: "Yesterday",
-    unreadCount: 0,
-    isOnline: false,
-    lastMessageType: "text"
-  },
-  {
-    id: 13,
-    name: "Anna Davis",
-    avatar: "https://randomuser.me/api/portraits/women/13.jpg",
-    lastMessage: "📷 Photo",
-    timestamp: "Yesterday",
-    unreadCount: 3,
-    isOnline: true,
-    lastMessageType: "image"
-  },
-  {
-    id: 14,
-    name: "Mark Johnson",
-    avatar: "https://randomuser.me/api/portraits/men/14.jpg",
-    lastMessage: "Great job on the presentation!",
-    timestamp: "Friday",
-    unreadCount: 0,
-    isOnline: false,
-    lastMessageType: "text"
-  },
-]
+// Define LoadingState and EmptyState before MessageSidebar
+const LoadingState = () => (
+  <div className="flex items-center justify-center p-12">
+    <div className="text-center">
+      <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-3"></div>
+      <p className="text-sm text-gray-500 font-medium">
+        Loading conversations...
+      </p>
+    </div>
+  </div>
+);
+
+const EmptyState = ({ searchQuery, activeFilter }) => (
+  <div className="flex items-center justify-center p-12 h-full">
+    <div className="text-center max-w-sm">
+      <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+      <h3 className="text-lg font-medium text-gray-900 mb-2">
+        {searchQuery
+          ? "No matches found"
+          : activeFilter === "unread"
+          ? "No unread messages"
+          : "No conversations"}
+      </h3>
+      <p className="text-sm text-gray-500 leading-relaxed">
+        {searchQuery
+          ? `Try searching for something else or clear your search.`
+          : activeFilter === "unread"
+          ? "All caught up! No unread messages."
+          : "Start a new conversation to see it here."}
+      </p>
+    </div>
+  </div>
+);
 
 const MessageSidebar = ({ onContactSelect, selectedContactId }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
 
-  const handleContactClick = (contactId) => {
-    // Call the parent's handler to update selected contact
-    onContactSelect(contactId);
+  const { data: conversations = [], isLoading, error } = useConversations();
+  console.log("MessageSidebar: Conversations data:", conversations);
+
+  const filteredConversations = useMemo(() => {
+    return conversations.filter((conv) => {
+      if (!conv?.otherUser?.fullname) return false;
+
+      const matchesSearch = conv.otherUser.fullname
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+      let matchesFilter = true;
+      switch (activeFilter) {
+        case "unread":
+          matchesFilter = (conv.unreadCount || 0) > 0;
+          break;
+        case "online":
+          matchesFilter = conv.otherUser.isOnline === true;
+          break;
+        case "all":
+        default:
+          matchesFilter = true;
+      }
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [conversations, searchQuery, activeFilter]);
+
+  const clearSearch = () => {
+    setSearchQuery("");
   };
 
-  const filteredContacts = contactsData.filter(contact =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  if (error) {
+    return (
+      <div className="w-full border-r border-gray-200 flex flex-col h-full bg-white">
+        <div className="flex items-center justify-center h-full p-8">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg
+                className="w-6 h-6 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <p className="text-red-600 font-medium mb-1">Connection Error</p>
+            <p className="text-sm text-gray-500">
+              Unable to load conversations
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className='w-full border-r border-r-slate-700  flex flex-col h-full'>
-      {/* Fixed Header - won't scroll */}
-      <header className='flex items-center justify-between p-5 border-b border-b-slate-700 flex-shrink-0'>
-        <div className='flex items-center bg-gray-100 rounded-lg px-3 py-2 flex-1'>
-          <Search className='w-4 h-4 text-gray-500 mr-2' />
+    <div className="w-full border-r border-gray-200 flex flex-col h-full bg-white">
+      <header className="flex-shrink-0 p-4 border-b border-gray-100 bg-white">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center min-w-0">
+            <MessageSquare className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" />
+            <h1 className="text-xl font-semibold text-gray-900 truncate">
+              Messages
+            </h1>
+          </div>
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+              {conversations.length}
+            </span>
+          </div>
+        </div>
+
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='bg-transparent outline-none text-sm flex-1 text-gray-700 placeholder-gray-500'
+            className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm 
+                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+                     transition-all duration-200"
           />
+          {searchQuery && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        <div className="flex bg-gray-50 rounded-lg p-1">
+          {[
+            { key: "all", label: "All", icon: Users },
+            { key: "unread", label: "Unread", icon: Bell },
+          ].map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveFilter(key)}
+              className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                activeFilter === key
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+              }`}
+            >
+              <Icon className="w-4 h-4 mr-1.5" />
+              {label}
+            </button>
+          ))}
         </div>
       </header>
 
-      {/* Scrollable Contact List - takes remaining space */}
-      <div className='flex-1 overflow-y-auto min-h-0'>
-        <ContactList 
-          contacts={filteredContacts}
-          activeContactId={selectedContactId}
-          onContactSelect={handleContactClick}
-        />
+      <div className="flex-1 overflow-y-auto">
+        {isLoading ? (
+          <LoadingState />
+        ) : filteredConversations.length === 0 ? (
+          <EmptyState searchQuery={searchQuery} activeFilter={activeFilter} />
+        ) : (
+          <ContactList
+            contacts={filteredConversations}
+            activeContactId={selectedContactId}
+            onContactSelect={onContactSelect}
+          />
+        )}
       </div>
-    </div>
-  )
-}
 
-export default MessageSidebar
+      {conversations.length > 0 && !isLoading && (
+        <footer className="flex-shrink-0 px-4 py-3 bg-gray-50 border-t border-gray-100">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <span className="font-medium">
+              {filteredConversations.length} of {conversations.length} chats
+            </span>
+            {conversations.filter((c) => (c.unreadCount || 0) > 0).length >
+              0 && (
+              <span className="flex items-center font-medium">
+                <div className="w-2 h-2 bg-blue-600 rounded-full mr-1.5"></div>
+                {
+                  conversations.filter((c) => (c.unreadCount || 0) > 0).length
+                }{" "}
+                unread
+              </span>
+            )}
+          </div>
+        </footer>
+      )}
+    </div>
+  );
+};
+
+export default MessageSidebar;

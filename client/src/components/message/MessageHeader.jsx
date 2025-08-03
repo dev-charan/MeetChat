@@ -1,93 +1,203 @@
-import React from 'react';
-import { Video, Phone, MoreVertical, ArrowLeft } from 'lucide-react';
+// MessageHeader.js
+import React, { useEffect } from "react";
+import { Video, Phone, MoreVertical, ArrowLeft } from "lucide-react";
+import { useSelector } from "react-redux";
+import { useConversationInfo } from "../../hooks/useConversationInfo";
 
-// Sample contact data - in real app this would come from props/context
-const contactsData = {
-  1: {
-    id: 1,
-    name: "Sarah Johnson",
-    avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-    isOnline: true,
-    lastSeen: "2 minutes ago"
-  },
-  2: {
-    id: 2,
-    name: "Mike Chen",
-    avatar: "https://randomuser.me/api/portraits/men/2.jpg",
-    isOnline: true,
-    lastSeen: "1 minute ago"
-  },
-  3: {
-    id: 3,
-    name: "Emma Wilson",
-    avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-    isOnline: false,
-    lastSeen: "10 minutes ago"
-  },
-  // Add more contacts as needed
-};
+const MessageHeader = ({ onBackClick, showBackButton = false }) => {
+  const otherUserId = useSelector((s) => s.chat.otherUserId);
 
-const MessageHeader = ({ selectedContactId, onBackClick }) => {
-  // Get selected user data
-  const selectedUser = selectedContactId ? contactsData[selectedContactId] : null;
+  useEffect(() => {
+    console.log("MessageHeader: otherUserId updated to:", otherUserId);
+  }, [otherUserId]);
 
-  // Show placeholder if no contact selected
-  if (!selectedUser) {
+  console.log("MessageHeader: otherUserId =", otherUserId);
+
+  const { data: info, isLoading, error } = useConversationInfo(otherUserId);
+
+  console.log(
+    "MessageHeader: conversation info =",
+    info,
+    "isLoading =",
+    isLoading,
+    "error =",
+    error
+  );
+
+  if (!otherUserId) {
     return (
-      <div className="flex items-center justify-center p-4 border-b border-b-slate-700 bg-gray-50">
+      <div className="flex items-center justify-center p-4 border-b border-gray-200 bg-gray-50">
         <p className="text-gray-500">Select a contact to start chatting</p>
       </div>
     );
   }
 
-  return (
-    <div className="flex items-center justify-between p-4 border-b border-b-slate-700 ">
-      {/* Left side - Back button (mobile only) + User info */}
-      <div className="flex items-center gap-3">
-        {/* Back button - only visible on mobile */}
-        <button
-          onClick={onBackClick}
-          className="md:hidden p-2  hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-
-        {/* Profile picture with online indicator */}
-        <div className="relative">
-          <img 
-            src={selectedUser.avatar} 
-            alt={selectedUser.name}
-            className="w-10 h-10 rounded-full object-cover"
-          />
-          {/* Online status indicator */}
-          <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-            selectedUser.isOnline ? 'bg-green-500' : 'bg-gray-400'
-          }`} />
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-3">
+          {showBackButton && (
+            <button
+              onClick={onBackClick}
+              className="md:hidden p-2 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse" />
+          <div className="flex flex-col">
+            <div className="w-24 h-4 bg-gray-200 rounded animate-pulse mb-1" />
+            <div className="w-16 h-3 bg-gray-200 rounded animate-pulse" />
+          </div>
         </div>
-        
-        {/* Name and status */}
-        <div className="flex flex-col">
-          <h3 className="font-semibold ">{selectedUser.name}</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 bg-gray-200 rounded-full animate-pulse" />
+          <div className="w-9 h-9 bg-gray-200 rounded-full animate-pulse" />
+          <div className="w-9 h-9 bg-gray-200 rounded-full animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !info) {
+    return (
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-3">
+          {showBackButton && (
+            <button
+              onClick={onBackClick}
+              className="md:hidden p-2 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+            <span className="text-red-500 text-xs">!</span>
+          </div>
+          <div className="flex flex-col">
+            <p className="font-semibold text-red-600">Error loading contact</p>
+            <p className="text-sm text-gray-500">Unable to load contact info</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            disabled
+            className="p-2 text-gray-300 rounded-full cursor-not-allowed"
+          >
+            <Video className="w-5 h-5" />
+          </button>
+          <button
+            disabled
+            className="p-2 text-gray-300 rounded-full cursor-not-allowed"
+          >
+            <Phone className="w-5 h-5" />
+          </button>
+          <button
+            disabled
+            className="p-2 text-gray-300 rounded-full cursor-not-allowed"
+          >
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const otherUser = info?.otherUser;
+
+  if (!otherUser) {
+    return (
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-3">
+          {showBackButton && (
+            <button
+              onClick={onBackClick}
+              className="md:hidden p-2 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+            <span className="text-gray-400 text-xs">?</span>
+          </div>
+          <div className="flex flex-col">
+            <p className="font-semibold text-gray-600">Unknown Contact</p>
+            <p className="text-sm text-gray-500">
+              Contact information unavailable
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+            <Video className="w-5 h-5" />
+          </button>
+          <button className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+            <Phone className="w-5 h-5" />
+          </button>
+          <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white shadow-sm">
+      <div className="flex items-center gap-3">
+        {showBackButton && (
+          <button
+            onClick={onBackClick}
+            className="md:hidden p-2 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
+        <div className="relative">
+          <img
+            src={
+              otherUser.profilePic ||
+              "https://avatar.iran.liara.run/public/1.png"
+            }
+            alt={otherUser.fullname || "User"}
+            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+            onError={(e) => {
+              e.target.src = "https://avatar.iran.liara.run/public/1.png";
+            }}
+          />
+          <div
+            className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white ${
+              otherUser.isOnline ? "bg-green-500" : "bg-gray-400"
+            }`}
+          />
+        </div>
+        <div className="flex flex-col min-w-0">
+          <h3 className="font-semibold text-gray-900 truncate">
+            {otherUser.fullname || "Unknown User"}
+          </h3>
           <p className="text-sm text-gray-500">
-            {selectedUser.isOnline ? 'Online' : `Last seen ${selectedUser.lastSeen}`}
+            {otherUser.isOnline ? "Online" : "Offline"}
           </p>
         </div>
       </div>
-
-      {/* Right side - Action buttons */}
-      <div className="flex items-center gap-2">
-        {/* Video call button */}
-        <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+      <div className="flex items-center gap-1">
+        <button
+          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+          aria-label="Video call"
+        >
           <Video className="w-5 h-5" />
         </button>
-        
-        {/* Voice call button */}
-        <button className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors">
+        <button
+          className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-full transition-colors"
+          aria-label="Voice call"
+        >
           <Phone className="w-5 h-5" />
         </button>
-        
-        {/* More options button */}
-        <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
+        <button
+          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="More options"
+        >
           <MoreVertical className="w-5 h-5" />
         </button>
       </div>
