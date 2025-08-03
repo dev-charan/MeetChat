@@ -50,11 +50,11 @@ const ContactItem = ({
     <div
       className={`
         flex items-center p-4 cursor-pointer transition-all duration-200 
-        hover:bg-gray-50 border-b border-gray-100
+         border-b 
         ${
           isActive
             ? "bg-blue-50 border-r-4 border-r-blue-500 shadow-sm"
-            : "hover:bg-gray-50"
+            : ""
         }
       `}
       onClick={handleClick}
@@ -74,12 +74,12 @@ const ContactItem = ({
         <div className="flex justify-between items-center mb-1">
           <h4
             className={`text-sm font-semibold truncate flex-1 ${
-              isActive ? "text-blue-900" : "text-gray-900"
+              isActive ? "text-blue-900" : ""
             }`}
           >
             {name}
           </h4>
-          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+          <span className="text-xs  ml-2 flex-shrink-0">
             {formatTimestamp(timestamp)}
           </span>
         </div>
@@ -88,7 +88,7 @@ const ContactItem = ({
         <div className="flex justify-between items-center">
           <p
             className={`text-sm truncate flex-1 ${
-              unreadCount > 0 ? "text-gray-900 font-medium" : "text-gray-600"
+              unreadCount > 0 ? " font-medium" : ""
             }`}
           >
             {lastMessageType === "image"
@@ -100,7 +100,7 @@ const ContactItem = ({
 
           {/* Unread Badge */}
           {unreadCount > 0 && (
-            <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center ml-2 flex-shrink-0">
+            <span className="bg-blue-500  text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center ml-2 flex-shrink-0">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}

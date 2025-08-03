@@ -135,7 +135,7 @@ const MessageChat = () => {
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg max-w-xs">
             <Paperclip className="w-5 h-5 text-gray-500" />
             <div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium ">
                 {message.fileName || "File"}
               </p>
               <p className="text-xs text-gray-500">File</p>
@@ -151,7 +151,7 @@ const MessageChat = () => {
   const userId = socket?.userId;
 
   return (
-    <div className="h-full flex flex-col">
+    <div data-theme="night" className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-custom">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
