@@ -33,7 +33,7 @@ const MessageLayout = () => {
   };
 
   return (
-    <div className="flex w-full h-full overflow-hidden bg-white">
+    <div data-theme="night" className="flex w-full h-full overflow-hidd">
       {/* Mobile Layout */}
       <div className="md:hidden w-full h-full">
         {!otherUserId ? (
@@ -63,8 +63,8 @@ const MessageLayout = () => {
           <Panel
             defaultSize={30}
             minSize={20}
-            maxSize={50}
-            className="flex-shrink-0 bg-white"
+            maxSize={30}
+            className="flex-shrink-0"
           >
             <MessageSidebar
               onContactSelect={handleContactSelect}
@@ -72,7 +72,7 @@ const MessageLayout = () => {
             />
           </Panel>
 
-          <PanelResizeHandle className="w-2 bg-gray-200 hover:bg-blue-300 transition-colors duration-200 cursor-col-resize active:bg-blue-400" />
+          <PanelResizeHandle className=" hover:bg-blue-300 transition-colors duration-200 cursor-col-resize active:bg-blue-400" />
 
           <Panel
             defaultSize={70}
@@ -103,7 +103,7 @@ const MessageLayout = () => {
 };
 
 const WelcomeScreen = () => (
-  <div className="flex items-center justify-center h-full">
+  <div data-theme="night" className="flex items-center justify-center h-full">
     <div className="text-center max-w-md mx-auto p-8">
       <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-6">
         <svg
@@ -120,7 +120,7 @@ const WelcomeScreen = () => (
           />
         </svg>
       </div>
-      <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+      <h2 className="text-2xl font-semibold  mb-3">
         Welcome to Messages
       </h2>
       <p className="text-gray-600 leading-relaxed">

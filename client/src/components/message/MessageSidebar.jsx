@@ -1,4 +1,3 @@
-// MessageSidebar.js
 import { useConversations } from "../../hooks/useConversationInfo";
 import { useState, useMemo } from "react";
 import { Search, MessageSquare, Users, Bell } from "lucide-react";
@@ -76,7 +75,7 @@ const MessageSidebar = ({ onContactSelect, selectedContactId }) => {
 
   if (error) {
     return (
-      <div className="w-full border-r border-gray-200 flex flex-col h-full bg-white">
+      <div className="w-full border-r  flex flex-col h-full">
         <div className="flex items-center justify-center h-full p-8">
           <div className="text-center">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -105,20 +104,11 @@ const MessageSidebar = ({ onContactSelect, selectedContactId }) => {
   }
 
   return (
-    <div className="w-full border-r border-gray-200 flex flex-col h-full bg-white">
-      <header className="flex-shrink-0 p-4 border-b border-gray-100 bg-white">
+    <div className="w-full border-r  flex flex-col h-full">
+      <header className="flex-shrink-0 p-4 border-b ">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center min-w-0">
-            <MessageSquare className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" />
-            <h1 className="text-xl font-semibold text-gray-900 truncate">
-              Messages
-            </h1>
-          </div>
-          <div className="flex items-center space-x-2 flex-shrink-0">
-            <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-              {conversations.length}
-            </span>
-          </div>
+         
+        
         </div>
 
         <div className="relative mb-3">
@@ -128,14 +118,14 @@ const MessageSidebar = ({ onContactSelect, selectedContactId }) => {
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm 
+            className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border  rounded-xl text-sm 
                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
                      transition-all duration-200"
           />
           {searchQuery && (
             <button
               onClick={clearSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 "
             >
               <svg
                 className="w-4 h-4"
@@ -165,7 +155,7 @@ const MessageSidebar = ({ onContactSelect, selectedContactId }) => {
               className={`flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                 activeFilter === key
                   ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+                  : "text-gray-600"
               }`}
             >
               <Icon className="w-4 h-4 mr-1.5" />
@@ -190,7 +180,7 @@ const MessageSidebar = ({ onContactSelect, selectedContactId }) => {
       </div>
 
       {conversations.length > 0 && !isLoading && (
-        <footer className="flex-shrink-0 px-4 py-3 bg-gray-50 border-t border-gray-100">
+        <footer className="flex-shrink-0 px-4 py-3 bg-gray-50 border-t ">
           <div className="flex items-center justify-between text-xs text-gray-500">
             <span className="font-medium">
               {filteredConversations.length} of {conversations.length} chats

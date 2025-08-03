@@ -34,7 +34,7 @@ const MessageHeader = ({ onBackClick, showBackButton = false }) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           {showBackButton && (
             <button
@@ -61,7 +61,7 @@ const MessageHeader = ({ onBackClick, showBackButton = false }) => {
 
   if (error || !info) {
     return (
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           {showBackButton && (
             <button
@@ -107,7 +107,7 @@ const MessageHeader = ({ onBackClick, showBackButton = false }) => {
 
   if (!otherUser) {
     return (
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
           {showBackButton && (
             <button
@@ -143,12 +143,12 @@ const MessageHeader = ({ onBackClick, showBackButton = false }) => {
   }
 
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white shadow-sm">
+    <div data-theme="night" className="flex items-center justify-between p-4 border-b border-gray-200 shadow-sm">
       <div className="flex items-center gap-3">
         {showBackButton && (
           <button
             onClick={onBackClick}
-            className="md:hidden p-2 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+            className="md:hidden p-2  rounded-full transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -173,7 +173,7 @@ const MessageHeader = ({ onBackClick, showBackButton = false }) => {
           />
         </div>
         <div className="flex flex-col min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate">
+          <h3 className="font-semibold  truncate">
             {otherUser.fullname || "Unknown User"}
           </h3>
           <p className="text-sm text-gray-500">
