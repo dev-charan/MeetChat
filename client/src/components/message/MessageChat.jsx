@@ -1,177 +1,90 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Smile } from 'lucide-react';
+import React, { useRef, useEffect, useState } from "react";
+import { Send, Paperclip, Smile } from "lucide-react";
+import { useSelector } from "react-redux";
+import { useSocket } from "../../context/SocketProvider";
+import { fetchMessages } from "../../lib/messageapi"; // REST fetch
+// We'll skip React Query here; just plain fetch for initial load
 
-const MessageChat = ({ selectedContactId }) => {
+const MessageChat = () => {
+  const socket = useSocket();
+  const selectedContactId = useSelector((s) => s.chat.selectedContactId);
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
-  
-  // Sample message data - in real app, this would be filtered by selectedContactId
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      senderId: 1,
-      receiverId: 2,
-      text: "Hey! How are you doing?",
-      timestamp: "2024-01-15T10:30:00Z",
-      type: "text",
-      isOwn: false
-    },
-    {
-      id: 2,
-      senderId: 2,
-      receiverId: 1,
-      text: "I'm doing great! Just finished my morning workout. How about you?",
-      timestamp: "2024-01-15T10:32:00Z",
-      type: "text",
-      isOwn: true
-    },
-    {
-      id: 3,
-      senderId: 1,
-      receiverId: 2,
-      text: "That's awesome! I'm just getting started with my day.",
-      timestamp: "2024-01-15T10:35:00Z",
-      type: "text",
-      isOwn: false
-    },
-    {
-      id: 4,
-      senderId: 2,
-      receiverId: 1,
-      text: "https://picsum.photos/300/200?random=1",
-      timestamp: "2024-01-15T10:40:00Z",
-      type: "image",
-      isOwn: true
-    },
-    {
-      id: 5,
-      senderId: 1,
-      receiverId: 2,
-      text: "Nice photo! Where was this taken?",
-      timestamp: "2024-01-15T10:42:00Z",
-      type: "text",
-      isOwn: false
-    },
-    {
-      id: 6,
-      senderId: 2,
-      receiverId: 1,
-      text: "That's from my hike last weekend. The weather was perfect!",
-      timestamp: "2024-01-15T10:45:00Z",
-      type: "text",
-      isOwn: true
-    },
-    {
-      id: 7,
-      senderId: 1,
-      receiverId: 2,
-      text: "I need to get out more often. Any recommendations for good hiking spots?",
-      timestamp: "2024-01-15T10:47:00Z",
-      type: "text",
-      isOwn: false
-    },
-    {
-      id: 8,
-      senderId: 2,
-      receiverId: 1,
-      text: "Absolutely! I know several great trails. Let me send you a list.",
-      timestamp: "2024-01-15T10:50:00Z",
-      type: "text",
-      isOwn: true
-    },
-    {
-      id: 9,
-      senderId: 1,
-      receiverId: 2,
-      text: "That would be amazing, thank you!",
-      timestamp: "2024-01-15T10:52:00Z",
-      type: "text",
-      isOwn: false
-    },
-    {
-      id: 10,
-      senderId: 2,
-      receiverId: 1,
-      text: "Document.pdf",
-      timestamp: "2024-01-15T10:55:00Z",
-      type: "file",
-      fileName: "Hiking_Spots_List.pdf",
-      isOwn: true
-    }
-  ]);
 
-  const [newMessage, setNewMessage] = useState('');
-
-  // Auto scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Load chat history on contact select
   useEffect(() => {
-    scrollToBottom();
+    if (!selectedContactId || !socket) {
+      setMessages([]);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    fetchMessages(selectedContactId)
+      .then((res) => {
+        setMessages(res.data.data.messages || []);
+        setIsLoading(false);
+        // After initial load: join room & mark messages as read
+        socket.emit("conversation:join_and_load", {
+          otherUserId: selectedContactId,
+        });
+        socket.emit("dm:seen", { otherUserId: selectedContactId });
+      })
+      .catch((err) => {
+        setError("Failed to load messages");
+        setIsLoading(false);
+      });
+
+    // Subscribe to socket events
+    function handleIncoming(data) {
+      // Only append if this chat is open (prevent from showing in wrong chat)
+      if (
+        data.conversationId ===
+          [socket.userId, selectedContactId].sort().join("_") ||
+        data.message.sender === selectedContactId ||
+        data.message.recipient === selectedContactId
+      ) {
+        setMessages((prev) => [...prev, data.message]);
+      }
+    }
+    function handleOwnSent(data) {
+      setMessages((prev) => [...prev, data.message]);
+    }
+
+    socket.on("dm:received", handleIncoming);
+    socket.on("dm:sent", handleOwnSent);
+
+    return () => {
+      socket.off("dm:received", handleIncoming);
+      socket.off("dm:sent", handleOwnSent);
+    };
+  }, [selectedContactId, socket]);
+
+  // Scroll to new message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Format timestamp
-  const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
-  // Send message handler
+  // Send message via socket
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedContactId) return;
-
-    const message = {
-      id: messages.length + 1,
-      senderId: 2, // Current user
-      receiverId: selectedContactId,
-      text: newMessage,
-      timestamp: new Date().toISOString(),
-      type: "text",
-      isOwn: true
-    };
-
-    setMessages([...messages, message]);
-    setNewMessage('');
+    socket.emit("dm:send", {
+      recipientId: selectedContactId,
+      content: newMessage.trim(),
+      messageType: "text",
+    });
+    setNewMessage("");
   };
 
-  // Render message content based on type
-  const renderMessageContent = (message) => {
-    switch (message.type) {
-      case 'image':
-        return (
-          <div className="max-w-xs">
-            <img 
-              src={message.text} 
-              alt="Shared image" 
-              className="rounded-lg w-full h-auto object-cover"
-            />
-          </div>
-        );
-      case 'file':
-        return (
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg max-w-xs">
-            <Paperclip className="w-5 h-5 text-gray-500" />
-            <div>
-              <p className="text-sm font-medium text-gray-900">{message.fileName}</p>
-              <p className="text-xs text-gray-500">PDF Document</p>
-            </div>
-          </div>
-        );
-      default:
-        return <p className="text-sm">{message.text}</p>;
-    }
-  };
-
-  // Show empty state when no contact is selected
+  // Handle optimistic UI and loading/error
   if (!selectedContactId) {
     return (
-      <div className="h-full flex items-center justify-center ">
+      <div className="h-full flex items-center justify-center bg-gray-50">
         <div className="text-center text-gray-500">
-          <div className="w-16 h-16  rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-gray-200">
             <Smile className="w-8 h-8 text-gray-400" />
           </div>
           <p className="text-lg font-medium">Select a contact</p>
@@ -180,51 +93,68 @@ const MessageChat = ({ selectedContactId }) => {
       </div>
     );
   }
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-50">
+        <div className="text-gray-500">Loading conversation...</div>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-50">
+        <div className="text-red-500">Error loading messages</div>
+      </div>
+    );
+  }
 
-  return (
-    <div className="h-full flex flex-col ">
-      {/* Messages container - scrollable */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-custom">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className={`flex items-end gap-2 max-w-xs lg:max-w-md ${message.isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-              {/* Avatar */}
-              <img
-                src={`https://randomuser.me/api/portraits/${message.isOwn ? 'men' : 'women'}/${message.isOwn ? '2' : selectedContactId}.jpg`}
-                alt="Avatar"
-                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-              />
-              
-              {/* Message bubble */}
-              <div className={`flex flex-col ${message.isOwn ? 'items-end' : 'items-start'}`}>
-                <div
-                  className={`px-4 py-2 rounded-2xl ${
-                    message.isOwn
-                      ? 'bg-blue-500 text-white rounded-br-sm'
-                      : 'bg-white text-gray-900 rounded-bl-sm border'
-                  }`}
-                >
-                  {renderMessageContent(message)}
-                </div>
-                
-                {/* Timestamp */}
-                <span className="text-xs text-gray-500 mt-1 px-2">
-                  {formatTime(message.timestamp)}
-                </span>
-              </div>
+  const formatTime = (timestamp) => {
+    try {
+      return new Date(timestamp).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return "";
+    }
+  };
+
+  const renderMessageContent = (message) => {
+    switch (message.messageType) {
+      case "image":
+        return (
+          <img
+            src={message.fileUrl}
+            alt="Shared"
+            className="rounded-lg w-full h-auto object-cover max-w-xs"
+          />
+        );
+      case "file":
+        return (
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg max-w-xs">
+            <Paperclip className="w-5 h-5 text-gray-500" />
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {message.fileName || "File"}
+              </p>
+              <p className="text-xs text-gray-500">File</p>
             </div>
           </div>
-        ))}
-        
-        {/* Auto scroll anchor */}
-        <div ref={messagesEndRef} />
-        
-        {/* Empty state for messages */}
-        {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full text-gray-500">
+        );
+      default:
+        return <p className="text-sm">{message.content}</p>;
+    }
+  };
+
+  // Use local userId if you want to highlight "own" messages
+  const userId = socket?.userId;
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-custom">
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Smile className="w-8 h-8 text-gray-400" />
@@ -233,39 +163,66 @@ const MessageChat = ({ selectedContactId }) => {
               <p className="text-sm">Start a conversation!</p>
             </div>
           </div>
+        ) : (
+          messages.map((message, idx) => (
+            <div
+              key={message._id || idx}
+              className={`flex ${
+                message.sender === userId ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`flex items-end gap-2 max-w-xs lg:max-w-md ${
+                  message.sender === userId ? "flex-row-reverse" : "flex-row"
+                }`}
+              >
+                <img
+                  src={
+                    message.senderProfilePic ||
+                    "https://avatar.iran.liara.run/public/1.png"
+                  }
+                  alt="Avatar"
+                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                  onError={(e) => {
+                    e.target.src = "https://avatar.iran.liara.run/public/1.png";
+                  }}
+                />
+                <div className="flex flex-col">
+                  <div
+                    className={`px-4 py-2 rounded-2xl ${
+                      message.sender === userId
+                        ? "bg-blue-500 text-white rounded-br-sm"
+                        : "rounded-bl-sm border border-gray-200"
+                    }`}
+                  >
+                    {renderMessageContent(message)}
+                  </div>
+                  <span className="text-xs text-gray-500 mt-1 px-2">
+                    {formatTime(message.createdAt)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))
         )}
+        <div ref={messagesEndRef} />
       </div>
-      
-      {/* Message input - fixed at bottom */}
-      <div className="flex-shrink-0 p-4  border-t border-gray-200">
+      <div className="flex-shrink-0 p-4 border-t border-gray-200 ">
         <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-          {/* Attachment button */}
-          <button
-            type="button"
-            className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-          >
+          <button type="button" className="p-2 text-gray-500" disabled>
             <Paperclip className="w-5 h-5" />
           </button>
-          
-          {/* Message input */}
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-full"
           />
-          
-          {/* Emoji button */}
-          <button
-            type="button"
-            className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-          >
+          <button type="button" className="p-2 text-gray-500" disabled>
             <Smile className="w-5 h-5" />
           </button>
-          
-          {/* Send button */}
-          <button 
+          <button
             type="submit"
             disabled={!newMessage.trim()}
             className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
@@ -275,7 +232,7 @@ const MessageChat = ({ selectedContactId }) => {
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default MessageChat;
